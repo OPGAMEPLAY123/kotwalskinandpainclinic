@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#1a6b5a"/>
+  <title>Kotwal Skin &amp; Pain Clinic</title>
+
+  <!-- ══ GOOGLE FONTS ══ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+
+  <!-- ══ FONT AWESOME — multi-CDN fallback chain ══
+       Primary  : jsDelivr  (very stable, works on InfinityFree)
+       Fallback1: cdnjs
+       Fallback2: inline Unicode-emoji shim (always works, no external call)
+  -->
+  <link id="fa-primary"
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css"
+        crossorigin="anonymous"/>
+
+  <script>
+  /* FA fallback loader — runs synchronously before body paints */
+  (function(){
+    function faLoaded(){
+      /* Check if a test pseudo-element resolves the FA font */
+      var test = document.createElement('span');
+      test.className = 'fa-solid fa-check';
+      test.style.cssText = 'position:absolute;visibility:hidden;font-size:16px';
+      document.head.appendChild(test);
+      var w = test.getBoundingClientRect().width;
+      document.head.removeChild(test);
+      return w > 0;
+    }
+    var primary = document.getElementById('fa-primary');
+    primary.onerror = function(){
+      /* Primary CDN failed — try cdnjs */
+      var fb1 = document.createElement('link');
+      fb1.rel  = 'stylesheet';
+      fb1.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+      fb1.crossOrigin = 'anonymous';
+      fb1.onerror = function(){
+        /* cdnjs also failed — inject SVG-based shim via a data-URI sheet */
+        var style = document.createElement('style');
+        style.textContent = [
+          /* Minimal emoji shim so UI still makes sense without FA */
+          '.fa-stethoscope::before{content:"🩺"}',
+          '.fa-hospital::before{content:"🏥"}',
+          '.fa-sun::before{content:"☀️"}',
+          '.fa-moon::before{content:"🌙"}',
+          '.fa-hospital-user::before{content:"🏥"}',
+          '.fa-video::before,.fa-video-slash::before{content:"📹"}',
+          '.fa-star::before{content:"⭐"}',
+          '.fa-user-group::before{content:"👥"}',
+          '.fa-arrow-left::before{content:"←"}',
+          '.fa-arrow-right::before{content:"→"}',
+          '.fa-calendar-check::before{content:"📅"}',
+          '.fa-spinner::before{content:"⟳"}',
+          '.fa-paper-plane::before{content:"📨"}',
+          '.fa-shield-halved::before{content:"🛡️"}',
+          '.fa-bolt::before{content:"⚡"}',
+          '.fa-cloud-arrow-up::before{content:"☁️"}',
+          '.fa-copy::before{content:"📋"}',
+          '.fa-hourglass-half::before{content:"⏳"}',
+          '.fa-circle-check::before{content:"✅"}',
+          '.fa-chart-pie::before{content:"📊"}',
+          '.fa-plus::before{content:"+"}',
+          '.fa-circle-user::before,.fa-user-circle::before{content:"👤"}',
+          '.fa-calendar-xmark::before{content:"🗓️"}',
+          '.fa-user-doctor::before{content:"👨‍⚕️"}',
+          '.fa-user-injured::before{content:"🤕"}',
+          '.fa-calendar::before{content:"📅"}',
+          '.fa-clock::before{content:"🕐"}',
+          '.fa-bookmark::before{content:"🔖"}',
+          '.fa-comment-medical::before{content:"💬"}',
+          '.fa-file-medical::before{content:"📄"}',
+          '.fa-download::before{content:"⬇️"}',
+          '.fa-microphone::before{content:"🎤"}',
+          '.fa-microphone-slash::before{content:"🔇"}',
+          '.fa-phone-slash::before{content:"📵"}',
+          '.fa-right-from-bracket::before{content:"🚪"}',
+          '.fa-circle-xmark::before{content:"❌"}',
+          '.fa-spin{animation:spin .8s linear infinite}',
+          '@keyframes spin{to{transform:rotate(360deg)}}'
+        ].join('\n');
+        document.head.appendChild(style);
+        console.warn('KSP: Font Awesome CDNs failed — using emoji shim');
+      };
+      document.head.appendChild(fb1);
+    };
+  })();
+  </script>
+
+  <!-- ══ APP STYLES ══ -->
+  <link rel="stylesheet" href="style.css"/>
+
+  <!-- ══ FIREBASE COMPAT SDKs ══
+       Using firebase.googleapis.com (same CDN as Google's own tools — very stable)
+  -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <!-- Jitsi is NOT loaded here — app.js loads it lazily only when a video call starts -->
+</head>
+<body>
+
+<!-- ══════════════ LOGIN SCREEN ══════════════ -->
+<div id="loginScreen" class="screen active">
+  <div class="login-blobs">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo"><i class="fa-solid fa-stethoscope"></i></div>
+    <h1 class="login-title">Kotwal Skin &amp; Pain Clinic</h1>
+    <p class="login-sub">Dr. Aejaz Kotwal · BUMS</p>
+    <div class="login-divider"></div>
+    <p class="login-prompt">Sign in to book your appointment</p>
+    <button id="googleLoginBtn" class="google-btn">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+           alt="G"
+           onerror="this.style.display='none'"/>
+      Continue with Google
+    </button>
+    <p class="login-note">Your data is safe and secure</p>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="appScreen" class="screen">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="header-icon"><i class="fa-solid fa-stethoscope"></i></div>
+      <span class="header-title">KSP Clinic</span>
+    </div>
+    <div class="header-right">
+      <img id="headerAvatar" src="" alt="" class="header-avatar"
+           onerror="this.style.display='none'"/>
+    </div>
+  </header>
+
+  <!-- Pages -->
+  <main class="app-main">
+
+    <!-- ── PAGE: DOCTOR ── -->
+    <section id="page-doctor" class="page active">
+      <div class="page-scroll">
+
+        <!-- Doctor Hero Card -->
+        <div class="doctor-card glass-card">
+          <div class="doctor-photo-wrap">
+            <img src="https://ui-avatars.com/api/?name=Dr+Aejaz+Kotwal&background=1a6b5a&color=fff&size=200&bold=true"
+                 alt="Doctor" class="doctor-photo"
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'90\' height=\'90\' viewBox=\'0 0 90 90\'%3E%3Ccircle cx=\'45\' cy=\'45\' r=\'45\' fill=\'%231a6b5a\'/%3E%3Ctext x=\'45\' y=\'55\' text-anchor=\'middle\' fill=\'white\' font-size=\'28\' font-family=\'sans-serif\'%3EDr%3C/text%3E%3C/svg%3E'"/>
+            <div class="doctor-badge">BUMS</div>
+          </div>
+          <div class="doctor-info">
+            <h2 class="doctor-name">Dr. Aejaz Kotwal</h2>
+            <p class="doctor-spec">Skin &amp; Pain Specialist</p>
+            <p class="doctor-clinic"><i class="fa-solid fa-hospital"></i> Kotwal Skin &amp; Pain Clinic</p>
+            <div class="doctor-stats">
+              <div class="dstat"><i class="fa-solid fa-star"></i> 4.9</div>
+              <div class="dstat"><i class="fa-solid fa-user-group"></i> 2000+ Patients</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timings + Fees -->
+        <div class="info-grid">
+          <div class="info-tile glass-card">
+            <div class="tile-ico morning"><i class="fa-solid fa-sun"></i></div>
+            <div><div class="tile-lbl">Morning</div><div class="tile-val">10 AM – 2 PM</div></div>
+          </div>
+          <div class="info-tile glass-card">
+            <div class="tile-ico evening"><i class="fa-solid fa-moon"></i></div>
+            <div><div class="tile-lbl">Evening</div><div class="tile-val">6 PM – 10 PM</div></div>
+          </div>
+          <div class="info-tile glass-card">
+            <div class="tile-ico offline"><i class="fa-solid fa-hospital-user"></i></div>
+            <div><div class="tile-lbl">Offline Visit</div><div class="tile-val">₹100</div></div>
+          </div>
+          <div class="info-tile glass-card">
+            <div class="tile-ico online"><i class="fa-solid fa-video"></i></div>
+            <div><div class="tile-lbl">Online Consult</div><div class="tile-val">₹500</div></div>
+          </div>
+        </div>
+
+        <!-- Rating -->
+        <div class="rating-strip glass-card">
+          <i class="fa-solid fa-star" style="color:#fbbf24"></i>
+          Want to rate our clinic?
+          <a href="https://share.google/BUaM7UCZuKdtItLAU" target="_blank" rel="noopener" class="rate-link">Click Here</a>
+        </div>
+
+        <!-- Book Buttons -->
+        <button class="book-btn offline-btn" onclick="goToPage('offline')">
+          <i class="fa-solid fa-hospital-user"></i>
+          Offline Book Appointment
+        </button>
+        <button class="book-btn online-btn" onclick="goToPage('online')">
+          <i class="fa-solid fa-video"></i>
+          Online Book Appointment – ₹500
+        </button>
+
+      </div>
+    </section>
+
+    <!-- ── PAGE: OFFLINE APPOINTMENT ── -->
+    <section id="page-offline" class="page">
+      <div class="page-scroll">
+        <div class="page-hdr">
+          <button class="back-btn" onclick="goToPage('doctor')"><i class="fa-solid fa-arrow-left"></i></button>
+          <div><h2>Offline Appointment</h2><p>Book an in-clinic visit</p></div>
+        </div>
+
+        <div class="form-card glass-card">
+          <div class="patient-count-row">
+            <span class="form-section-label">How many patients?</span>
+            <div class="count-btns">
+              <button class="count-btn active" data-n="1" onclick="setCount(1,this)">1</button>
+              <button class="count-btn" data-n="2" onclick="setCount(2,this)">2</button>
+              <button class="count-btn" data-n="3" onclick="setCount(3,this)">3</button>
+            </div>
+          </div>
+          <div id="offlineForms"></div>
+          <button class="submit-btn" onclick="submitOffline()">
+            <i class="fa-solid fa-calendar-check"></i> Confirm Booking
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PAGE: ONLINE CONSULTATION ── -->
+    <section id="page-online" class="page">
+      <div class="page-scroll">
+        <div class="page-hdr">
+          <button class="back-btn" onclick="goToPage('doctor')"><i class="fa-solid fa-arrow-left"></i></button>
+          <div><h2>Online Consultation</h2><p>₹500 · Video call with Doctor</p></div>
+        </div>
+
+        <!-- Step 1: Patient Form -->
+        <div id="onlineStep1">
+          <div class="form-card glass-card">
+            <div class="step-badge">Step 1 of 3 — Patient Details</div>
+            <div class="form-group">
+              <label>Patient Full Name *</label>
+              <input type="text" id="on_name" placeholder="Enter full name" autocomplete="name"/>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Age *</label>
+                <input type="number" id="on_age" placeholder="Age" min="1" max="120"/>
+              </div>
+              <div class="form-group">
+                <label>Gender *</label>
+                <select id="on_gender">
+                  <option value="">Select</option>
+                  <option>Male</option><option>Female</option><option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Mobile Number *</label>
+              <input type="tel" id="on_mobile" placeholder="10-digit mobile" maxlength="10" autocomplete="tel"/>
+            </div>
+            <div class="form-group">
+              <label>Email Address *</label>
+              <input type="email" id="on_email" placeholder="patient@email.com" autocomplete="email"/>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Date *</label>
+                <input type="date" id="on_date"/>
+              </div>
+              <div class="form-group">
+                <label>Time Slot *</label>
+                <select id="on_slot">
+                  <option value="">Select</option>
+                  <option>Morning 10:00 AM</option><option>Morning 10:30 AM</option>
+                  <option>Morning 11:00 AM</option><option>Morning 11:30 AM</option>
+                  <option>Morning 12:00 PM</option><option>Morning 12:30 PM</option>
+                  <option>Morning 1:00 PM</option><option>Morning 1:30 PM</option>
+                  <option>Evening 6:00 PM</option><option>Evening 6:30 PM</option>
+                  <option>Evening 7:00 PM</option><option>Evening 7:30 PM</option>
+                  <option>Evening 8:00 PM</option><option>Evening 8:30 PM</option>
+                  <option>Evening 9:00 PM</option><option>Evening 9:30 PM</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Problem / Symptoms *</label>
+              <textarea id="on_symptoms" placeholder="Describe your symptoms..."></textarea>
+            </div>
+            <button class="submit-btn" onclick="goToPayment()">
+              <i class="fa-solid fa-arrow-right"></i> Proceed to Payment
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Payment -->
+        <div id="onlineStep2" style="display:none">
+          <div class="payment-card">
+            <div class="payment-header">
+              <div class="payment-logo"><i class="fa-solid fa-shield-halved"></i></div>
+              <div>
+                <div class="payment-clinic">KSP Clinic</div>
+                <div class="payment-type">Online Consultation</div>
+              </div>
+            </div>
+            <div class="payment-amount">
+              <span class="amt-cur">₹</span>
+              <span class="amt-num">500</span>
+              <span class="amt-label">One-time payment</span>
+            </div>
+            <div class="payment-upi">
+              <div class="upi-label">UPI ID</div>
+              <div class="upi-id" onclick="copyUPI()">7702392516@fam <i class="fa-regular fa-copy"></i></div>
+            </div>
+            <a href="https://pay.mypaylink.in/?q=Ck0u4q" target="_blank" rel="noopener" class="pay-now-btn">
+              <i class="fa-solid fa-bolt"></i> Pay Now ₹500
+            </a>
+            <div class="payment-note">After payment, upload your payment screenshot below</div>
+
+            <div class="upload-section">
+              <div class="step-badge">Step 2 of 3 — Upload Payment Proof</div>
+              <label class="upload-label" for="paymentScreenshot">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span id="uploadText">Tap to upload screenshot</span>
+              </label>
+              <input type="file" id="paymentScreenshot" accept="image/*" onchange="previewScreenshot(this)"/>
+              <img id="screenshotPreview" src="" alt="" style="display:none" class="screenshot-preview"/>
+            </div>
+            <button class="submit-btn" onclick="submitOnline()">
+              <i class="fa-solid fa-paper-plane"></i> Submit Appointment
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── PAGE: DASHBOARD ── -->
+    <section id="page-dashboard" class="page">
+      <div class="page-scroll">
+        <div class="page-hdr-simple">
+          <h2>My Appointments</h2>
+          <p id="dashGreet">Welcome!</p>
+        </div>
+        <div class="dash-stats">
+          <div class="dash-stat glass-card">
+            <div class="ds-ico pending-ico"><i class="fa-solid fa-hourglass-half"></i></div>
+            <span class="ds-num" id="dsPending">0</span>
+            <span class="ds-lbl">Pending</span>
+          </div>
+          <div class="dash-stat glass-card">
+            <div class="ds-ico approved-ico"><i class="fa-solid fa-circle-check"></i></div>
+            <span class="ds-num" id="dsApproved">0</span>
+            <span class="ds-lbl">Approved</span>
+          </div>
+          <div class="dash-stat glass-card">
+            <div class="ds-ico video-ico"><i class="fa-solid fa-video"></i></div>
+            <span class="ds-num" id="dsOnline">0</span>
+            <span class="ds-lbl">Online</span>
+          </div>
+        </div>
+        <div id="dashList" class="appt-list">
+          <div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i><p>No appointments yet</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PAGE: PROFILE ── -->
+    <section id="page-profile" class="page">
+      <div class="page-scroll">
+        <div class="profile-card glass-card">
+          <img id="profileAvatar" src="" alt="" class="profile-avatar"
+               onerror="this.style.display='none';document.querySelector('.profile-icon-fallback').style.display='block'"/>
+          <div class="profile-icon-fallback"><i class="fa-solid fa-user-circle"></i></div>
+          <h2 id="profileName">User</h2>
+          <p id="profileEmail">—</p>
+        </div>
+        <h3 class="section-title">Appointment History</h3>
+        <div id="profileList" class="appt-list">
+          <div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i><p>No appointments found</p></div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </section>
+
+    <!-- ── PAGE: VIDEO CALL ── -->
+    <section id="page-video" class="page">
+      <div class="page-scroll">
+        <div class="page-hdr">
+          <button class="back-btn" onclick="goToPage('dashboard')"><i class="fa-solid fa-arrow-left"></i></button>
+          <div><h2>Video Consultation</h2><p>Connected with Dr. Aejaz Kotwal</p></div>
+        </div>
+        <div class="video-container glass-card">
+          <div id="jitsiContainer"></div>
+          <div class="video-controls">
+            <button class="vc-btn" onclick="toggleMic()" id="micBtn" title="Mute/Unmute">
+              <i class="fa-solid fa-microphone"></i>
+            </button>
+            <button class="vc-btn end-btn" onclick="endCall()" title="End Call">
+              <i class="fa-solid fa-phone-slash"></i>
+            </button>
+            <button class="vc-btn" onclick="toggleCam()" id="camBtn" title="Camera On/Off">
+              <i class="fa-solid fa-video"></i>
+            </button>
+          </div>
+        </div>
+        <div id="prescriptionSection" style="display:none" class="prescription-card glass-card">
+          <div class="rx-header"><i class="fa-solid fa-file-medical"></i> Prescription Ready</div>
+          <p>Your doctor has uploaded your prescription.</p>
+          <a id="prescriptionLink" href="#" target="_blank" rel="noopener" class="rx-download-btn">
+            <i class="fa-solid fa-download"></i> Download Prescription
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="goToPage('doctor')">
+      <i class="fa-solid fa-user-doctor"></i><span>Doctor</span>
+    </button>
+    <button class="nav-btn" onclick="goToPage('dashboard')">
+      <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+    </button>
+    <button class="nav-btn nav-center" onclick="goToPage('offline')">
+      <div class="nav-center-icon"><i class="fa-solid fa-plus"></i></div>
+    </button>
+    <button class="nav-btn" onclick="goToPage('online')">
+      <i class="fa-solid fa-video"></i><span>Online</span>
+    </button>
+    <button class="nav-btn" onclick="goToPage('profile')">
+      <i class="fa-solid fa-circle-user"></i><span>Profile</span>
+    </button>
+  </nav>
+
+</div><!-- /#appScreen -->
+
+<!-- STATUS SCREEN -->
+<div id="statusScreen" class="status-screen">
+  <div id="statusContent" class="status-card"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- LOADER — visible by default, hidden once auth resolves (or after 6s timeout) -->
+<div id="loader" class="loader-overlay">
+  <div class="loader-box">
+    <div class="loader-spinner"></div>
+    <p class="loader-text">Loading…</p>
+  </div>
+</div>
+
+<noscript>
+  <div style="position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:99999;font-family:sans-serif;text-align:center;padding:20px">
+    <div>
+      <h2>JavaScript Required</h2>
+      <p>Please enable JavaScript to use the KSP Clinic app.</p>
+    </div>
+  </div>
+</noscript>
+
+<script src="app.js"></script>
+</body>
+</html>
