@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kotwal Skin & Pain Clinic</title>
+
+  <!--
+  ===================================================
+  InfinityFree-Ready Structure
+  Place all files in: htdocs/
+    htdocs/index.html
+    htdocs/app.js
+    htdocs/style.css
+  ===================================================
+  -->
+
+  <link rel="stylesheet" href="style.css"/>
+
+  <!--
+    FONT AWESOME -- Multi-CDN fallback chain.
+    If one fails, next loads automatically.
+    No local files needed -- all 3 CDNs are free & stable.
+  -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin/>
+  <link
+    id="fa-css"
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    crossorigin="anonymous"
+    onerror="loadFaFallback()"
+  />
+
+  <script>
+    /* Font Awesome CDN fallback -- runs before body renders */
+    var _faTried = 0;
+    var _faSources = [
+      'https://use.fontawesome.com/releases/v6.5.0/css/all.css',
+      'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css'
+    ];
+    function loadFaFallback(){
+      if(_faTried >= _faSources.length){ console.warn('All FA CDNs failed -- using emoji fallback'); return; }
+      var el = document.getElementById('fa-css');
+      if(el){ el.href = _faSources[_faTried++]; }
+    }
+  </script>
+
+  <!--
+    GOOGLE FONTS -- optional, graceful fallback to system font if offline
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+    rel="stylesheet"
+    onerror="console.warn('Google Fonts failed -- using system fonts')"
+  />
+
+  <!--
+    FIREBASE -- stable v9.23.0 compat SDK
+    Using gstatic which is Google's own CDN -- most reliable
+  -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <!--
+    JITSI -- loaded lazily in JS only when video call is needed
+    Do NOT load here -- causes freezes on InfinityFree
+  -->
+</head>
+<body>
+
+<!-- ==========================================
+     LOGIN SCREEN
+     Visible by default via CSS -- no JS needed
+========================================== -->
+<div id="loginScreen" class="screen active">
+  <div class="login-blobs">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <!-- Inline SVG stethoscope icon -- works without Font Awesome -->
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/>
+        <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/>
+        <circle cx="20" cy="10" r="2"/>
+      </svg>
+    </div>
+    <h1 class="login-title">Kotwal Skin &amp; Pain Clinic</h1>
+    <p class="login-sub">Dr. Aejaz Kotwal . BUMS</p>
+    <div class="login-divider"></div>
+    <p class="login-prompt">Sign in to book your appointment</p>
+    <button id="googleLoginBtn" class="google-btn" type="button">
+      <img
+        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+        alt="Google"
+        width="22" height="22"
+        onerror="this.style.display='none'"
+      />
+      Continue with Google
+    </button>
+    <p class="login-note">Your data is safe and secure</p>
+  </div>
+</div>
+
+<!-- ==========================================
+     MAIN APP
+========================================== -->
+<div id="appScreen" class="screen">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fa-solid fa-stethoscope" aria-hidden="true"></i>
+      </div>
+      <span class="header-title">KSP Clinic</span>
+    </div>
+    <div class="header-right">
+      <img
+        id="headerAvatar"
+        src=""
+        alt="Profile"
+        class="header-avatar"
+        onerror="this.style.display='none'"
+      />
+    </div>
+  </header>
+
+  <!-- Pages -->
+  <main class="app-main">
+
+    <!-- -- PAGE: DOCTOR -- -->
+    <section id="page-doctor" class="page active">
+      <div class="page-scroll">
+
+        <div class="doctor-card glass-card">
+          <div class="doctor-photo-wrap">
+            <img
+              src="https://ui-avatars.com/api/?name=Dr+Aejaz+Kotwal&background=1a6b5a&color=fff&size=200&bold=true"
+              alt="Dr. Aejaz Kotwal"
+              class="doctor-photo"
+              onerror="this.style.display='none'"
+            />
+            <div class="doctor-badge">BUMS</div>
+          </div>
+          <div class="doctor-info">
+            <h2 class="doctor-name">Dr. Aejaz Kotwal</h2>
+            <p class="doctor-spec">Skin &amp; Pain Specialist</p>
+            <p class="doctor-clinic">
+              <i class="fa-solid fa-hospital" aria-hidden="true"></i>
+              Kotwal Skin &amp; Pain Clinic
+            </p>
+            <div class="doctor-stats">
+              <div class="dstat"><i class="fa-solid fa-star" aria-hidden="true"></i> 4.9</div>
+              <div class="dstat"><i class="fa-solid fa-user-group" aria-hidden="true"></i> 2000+ Patients</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-tile glass-card">
+            <div class="tile-ico morning"><i class="fa-solid fa-sun" aria-hidden="true"></i></div>
+            <div><div class="tile-lbl">Morning</div><div class="tile-val">10 AM - 2 PM</div></div>
+          </div>
+          <div class="info-tile glass-card">
+            <div class="tile-ico evening"><i class="fa-solid fa-moon" aria-hidden="true"></i></div>
+            <div><div class="tile-lbl">Evening</div><div class="tile-val">6 PM - 10 PM</div></div>
+          </div>
+          <div class="info-tile glass-card">
+            <div class="tile-ico offline"><i class="fa-solid fa-hospital-user" aria-hidden="true"></i></div>
+            <div><div class="tile-lbl">Offline Visit</div><div class="tile-val">&#8377;100</div></div>
+          </div>
+          <div class="info-tile glass-card">
+            <div class="tile-ico online"><i class="fa-solid fa-video" aria-hidden="true"></i></div>
+            <div><div class="tile-lbl">Online Consult</div><div class="tile-val">&#8377;500</div></div>
+          </div>
+        </div>
+
+        <div class="rating-strip glass-card">
+          <i class="fa-solid fa-star" style="color:#fbbf24" aria-hidden="true"></i>
+          Want to rate our clinic?
+          <a href="https://share.google/BUaM7UCZuKdtItLAU" target="_blank" rel="noopener" class="rate-link">Click Here</a>
+        </div>
+
+        <button class="book-btn offline-btn" type="button" onclick="goToPage('offline')">
+          <i class="fa-solid fa-hospital-user" aria-hidden="true"></i>
+          Offline Book Appointment
+        </button>
+        <button class="book-btn online-btn" type="button" onclick="goToPage('online')">
+          <i class="fa-solid fa-video" aria-hidden="true"></i>
+          Online Book Appointment - &#8377;500
+        </button>
+
+      </div>
+    </section>
+
+    <!-- -- PAGE: OFFLINE APPOINTMENT -- -->
+    <section id="page-offline" class="page">
+      <div class="page-scroll">
+        <div class="page-hdr">
+          <button class="back-btn" type="button" onclick="goToPage('doctor')">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          </button>
+          <div>
+            <h2>Offline Appointment</h2>
+            <p>Book an in-clinic visit</p>
+          </div>
+        </div>
+        <div class="form-card glass-card">
+          <div class="patient-count-row">
+            <span class="form-section-label">How many patients?</span>
+            <div class="count-btns">
+              <button class="count-btn active" type="button" data-n="1" onclick="setCount(1,this)">1</button>
+              <button class="count-btn" type="button" data-n="2" onclick="setCount(2,this)">2</button>
+              <button class="count-btn" type="button" data-n="3" onclick="setCount(3,this)">3</button>
+            </div>
+          </div>
+          <div id="offlineForms"></div>
+          <button class="submit-btn" type="button" onclick="submitOffline()">
+            <i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Confirm Booking
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- -- PAGE: ONLINE CONSULTATION -- -->
+    <section id="page-online" class="page">
+      <div class="page-scroll">
+        <div class="page-hdr">
+          <button class="back-btn" type="button" onclick="goToPage('doctor')">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          </button>
+          <div>
+            <h2>Online Consultation</h2>
+            <p>&#8377;500 . Video call with Doctor</p>
+          </div>
+        </div>
+
+        <!-- Step 1: Patient Form -->
+        <div id="onlineStep1">
+          <div class="form-card glass-card">
+            <div class="step-badge">Step 1 of 3 -- Patient Details</div>
+            <div class="form-group">
+              <label>Patient Full Name *</label>
+              <input type="text" id="on_name" placeholder="Enter full name" autocomplete="name"/>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Age *</label>
+                <input type="number" id="on_age" placeholder="Age" min="1" max="120"/>
+              </div>
+              <div class="form-group">
+                <label>Gender *</label>
+                <select id="on_gender">
+                  <option value="">Select</option>
+                  <option>Male</option><option>Female</option><option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Mobile Number *</label>
+              <input type="tel" id="on_mobile" placeholder="10-digit mobile" maxlength="10" inputmode="numeric"/>
+            </div>
+            <div class="form-group">
+              <label>Email Address *</label>
+              <input type="email" id="on_email" placeholder="patient@email.com" autocomplete="email"/>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Date *</label>
+                <input type="date" id="on_date"/>
+              </div>
+              <div class="form-group">
+                <label>Time Slot *</label>
+                <select id="on_slot">
+                  <option value="">Select</option>
+                  <option>Morning 10:00 AM</option><option>Morning 10:30 AM</option>
+                  <option>Morning 11:00 AM</option><option>Morning 11:30 AM</option>
+                  <option>Morning 12:00 PM</option><option>Morning 12:30 PM</option>
+                  <option>Morning 1:00 PM</option><option>Morning 1:30 PM</option>
+                  <option>Evening 6:00 PM</option><option>Evening 6:30 PM</option>
+                  <option>Evening 7:00 PM</option><option>Evening 7:30 PM</option>
+                  <option>Evening 8:00 PM</option><option>Evening 8:30 PM</option>
+                  <option>Evening 9:00 PM</option><option>Evening 9:30 PM</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Problem / Symptoms *</label>
+              <textarea id="on_symptoms" placeholder="Describe your symptoms..." rows="3"></textarea>
+            </div>
+            <button class="submit-btn" type="button" onclick="goToPayment()">
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Proceed to Payment
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Payment -->
+        <div id="onlineStep2" style="display:none">
+          <div class="payment-card">
+            <div class="payment-header">
+              <div class="payment-logo"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div>
+              <div>
+                <div class="payment-clinic">KSP Clinic</div>
+                <div class="payment-type">Online Consultation</div>
+              </div>
+            </div>
+            <div class="payment-amount">
+              <span class="amt-cur">&#8377;</span>
+              <span class="amt-num">500</span>
+              <span class="amt-label">One-time payment</span>
+            </div>
+            <div class="payment-upi">
+              <div class="upi-label">UPI ID</div>
+              <div class="upi-id" onclick="copyUPI()" role="button" tabindex="0">
+                7702392516@fam
+                <i class="fa-regular fa-copy" aria-hidden="true"></i>
+              </div>
+            </div>
+            <a
+              href="https://pay.mypaylink.in/?q=Ck0u4q"
+              target="_blank"
+              rel="noopener"
+              class="pay-now-btn"
+            >
+              <i class="fa-solid fa-bolt" aria-hidden="true"></i> Pay Now &#8377;500
+            </a>
+            <div class="payment-note">After payment, upload your payment screenshot below</div>
+
+            <div class="upload-section">
+              <div class="step-badge">Step 2 of 3 -- Upload Payment Proof</div>
+              <label class="upload-label" for="paymentScreenshot">
+                <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+                <span id="uploadText">Tap to upload screenshot</span>
+              </label>
+              <input
+                type="file"
+                id="paymentScreenshot"
+                accept="image/*"
+                onchange="previewScreenshot(this)"
+              />
+              <img
+                id="screenshotPreview"
+                src=""
+                alt="Payment screenshot preview"
+                style="display:none"
+                class="screenshot-preview"
+              />
+            </div>
+
+            <button class="submit-btn" type="button" onclick="submitOnline()">
+              <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Submit Appointment
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- -- PAGE: DASHBOARD -- -->
+    <section id="page-dashboard" class="page">
+      <div class="page-scroll">
+        <div class="page-hdr-simple">
+          <h2>My Appointments</h2>
+          <p id="dashGreet">Welcome!</p>
+        </div>
+        <div class="dash-stats">
+          <div class="dash-stat glass-card">
+            <div class="ds-ico pending-ico"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></div>
+            <span class="ds-num" id="dsPending">0</span>
+            <span class="ds-lbl">Pending</span>
+          </div>
+          <div class="dash-stat glass-card">
+            <div class="ds-ico approved-ico"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
+            <span class="ds-num" id="dsApproved">0</span>
+            <span class="ds-lbl">Approved</span>
+          </div>
+          <div class="dash-stat glass-card">
+            <div class="ds-ico video-ico"><i class="fa-solid fa-video" aria-hidden="true"></i></div>
+            <span class="ds-num" id="dsOnline">0</span>
+            <span class="ds-lbl">Online</span>
+          </div>
+        </div>
+        <div id="dashList" class="appt-list">
+          <div class="empty-state">
+            <i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i>
+            <p>No appointments yet</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- -- PAGE: PROFILE -- -->
+    <section id="page-profile" class="page">
+      <div class="page-scroll">
+        <div class="profile-card glass-card">
+          <img
+            id="profileAvatar"
+            src=""
+            alt="Profile photo"
+            class="profile-avatar"
+            onerror="this.style.display='none'"
+          />
+          <h2 id="profileName">User</h2>
+          <p id="profileEmail">--</p>
+        </div>
+        <h3 class="section-title">Appointment History</h3>
+        <div id="profileList" class="appt-list">
+          <div class="empty-state">
+            <i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i>
+            <p>No appointments found</p>
+          </div>
+        </div>
+        <button class="logout-btn" type="button" onclick="doLogout()">
+          <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Logout
+        </button>
+      </div>
+    </section>
+
+    <!-- -- PAGE: VIDEO CALL -- -->
+    <section id="page-video" class="page">
+      <div class="page-scroll">
+        <div class="page-hdr">
+          <button class="back-btn" type="button" onclick="goToPage('dashboard')">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          </button>
+          <div>
+            <h2>Video Consultation</h2>
+            <p>Connected with Dr. Aejaz Kotwal</p>
+          </div>
+        </div>
+        <div class="video-container glass-card">
+          <div id="jitsiContainer"></div>
+          <div class="video-controls">
+            <button class="vc-btn" type="button" onclick="toggleMic()" id="micBtn" title="Mute/Unmute">
+              <i class="fa-solid fa-microphone" aria-hidden="true"></i>
+            </button>
+            <button class="vc-btn end-btn" type="button" onclick="endCall()" title="End Call">
+              <i class="fa-solid fa-phone-slash" aria-hidden="true"></i>
+            </button>
+            <button class="vc-btn" type="button" onclick="toggleCam()" id="camBtn" title="Camera On/Off">
+              <i class="fa-solid fa-video" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div id="prescriptionSection" style="display:none" class="prescription-card glass-card">
+          <div class="rx-header">
+            <i class="fa-solid fa-file-medical" aria-hidden="true"></i> Prescription Ready
+          </div>
+          <p>Your doctor has uploaded your prescription.</p>
+          <a id="prescriptionLink" href="#" target="_blank" rel="noopener" class="rx-download-btn">
+            <i class="fa-solid fa-download" aria-hidden="true"></i> Download Prescription
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+    <button class="nav-btn active" type="button" onclick="goToPage('doctor')">
+      <i class="fa-solid fa-user-doctor" aria-hidden="true"></i><span>Doctor</span>
+    </button>
+    <button class="nav-btn" type="button" onclick="goToPage('dashboard')">
+      <i class="fa-solid fa-chart-pie" aria-hidden="true"></i><span>Dashboard</span>
+    </button>
+    <button class="nav-btn nav-center" type="button" onclick="goToPage('offline')">
+      <div class="nav-center-icon"><i class="fa-solid fa-plus" aria-hidden="true"></i></div>
+    </button>
+    <button class="nav-btn" type="button" onclick="goToPage('online')">
+      <i class="fa-solid fa-video" aria-hidden="true"></i><span>Online</span>
+    </button>
+    <button class="nav-btn" type="button" onclick="goToPage('profile')">
+      <i class="fa-solid fa-circle-user" aria-hidden="true"></i><span>Profile</span>
+    </button>
+  </nav>
+
+</div><!-- /#appScreen -->
+
+<!-- STATUS SCREEN -->
+<div id="statusScreen" class="status-screen" role="dialog" aria-modal="true" aria-live="polite">
+  <div id="statusContent" class="status-card"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+<!--
+  LOADER -- starts HIDDEN.
+  Only shown during active operations (login, submit, etc).
+  Auto-hides via JS timeout -- never stuck forever.
+-->
+<div id="loader" class="loader-overlay hidden" aria-hidden="true">
+  <div class="loader-inner">
+    <div class="loader-spinner"></div>
+    <p class="loader-text">Loading...</p>
+  </div>
+</div>
+
+<!-- App script -- loaded last so DOM is ready -->
+<script src="app.js"></script>
+
+</body>
+</html>
